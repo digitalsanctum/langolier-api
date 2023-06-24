@@ -6,6 +6,9 @@ use std::{
     net::{Ipv4Addr, SocketAddr},
     sync::Arc,
 };
+use axum::http::header::CONTENT_TYPE;
+use axum::http::Method;
+use tower_http::cors::{Any, CorsLayer};
 
 mod news;
 mod error;
@@ -38,8 +41,19 @@ pub async fn serve(config: Config, db: PgPool) -> anyhow::Result<()> {
 }
 
 fn api_router(api_context: ApiContext) -> Router {
+
+    // TODO for dev only
+    let cors_layer = CorsLayer::new()
+        .allow_headers([CONTENT_TYPE])
+        // allow `GET` and `POST` when accessing the resource
+        .allow_methods([Method::GET, Method::POST])
+        // .allow_origin("http://localhost:5173".parse::<axum::http::HeaderValue>().unwrap());
+        // allow requests from any origin
+        .allow_origin(Any);
+
     Router::new()
         .merge(news::router())
-        .layer(TraceLayer::new_for_http())
+        // .layer(TraceLayer::new_for_http())
+        .layer(cors_layer)
         .with_state(api_context)
 }

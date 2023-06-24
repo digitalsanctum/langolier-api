@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  svc:
+    build: .
+    ports:
+      - "8080:8080"
+
+      - "3000:3000"
+
+
+    environment:
+      - DATABASE_URL=postgres://shane:s0crat3s@localhost/zipnews
+#    depends_on:
+#      - db
+
+#  db:
+#    image: postgres:15
+#    restart: always
+#    environment:
+#      - POSTGRES_USER=postgres
+#      - POSTGRES_PASSWORD=postgres
+#      - POSTGRES_DB=postgres
+#    volumes:
+#      - pgdata:/var/lib/postgresql/data
+#
+#volumes:
+#  pgdata:
+

@@ -1,0 +1,45 @@
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[package]
+name = "langolier-news"
+version = "0.1.0"
+description = "A simple news aggregator written in Rust"
+authors = ["Shane Witbeck <shane@digitalsanctum.com>"]
+edition = "2021"
+rust-version = "1.68"
+license-file = "LICENSE"
+readme = "README.md"
+documentation = "https://github.com/digitalsanctum/langolier-news"
+homepage = "https://github.com/digitalsanctum/langolier-news"
+repository = "https://github.com/digitalsanctum/langolier-news"
+keywords = ["langolier-news"]
+
+[badges]
+maintenance = { status = "actively-developed" }
+
+[[bin]]
+name = "langolier-news"
+path = "src/main.rs"
+
+[dependencies]
+axum = "0.6.15"
+
+# https://docs.rs/axum-extra/latest/axum_extra/
+axum-extra = "0.7.3"
+
+tower = { version = "0.4", features = ["util"] }
+tower-http = { version = "0.4", features = ["fs", "trace"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_derive = "1"
+serde_json = "1"
+tokio = { version = "1.0", features = ["full"] }
+tracing = "0.1.37"
+tracing-subscriber = { version = "0.3.16", features = ["env-filter"] }
+
+# The `clap` beta gives us a much nicer way to define configuration parameters for our application.
+clap = { version = "4.0.0", features = ["derive", "env"] }
+
+sqlx = { version = "0.6.3", features = [ "postgres", "runtime-tokio-rustls", "uuid", "time", "macros", "chrono", "any" ] }
+uuid = { version = "1", features = ["serde", "v4"] }
+chrono = { version = "0.4.26", features = ["serde"] }
+anyhow = "1.0.71"
+thiserror = "1.0.30"

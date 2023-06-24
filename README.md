@@ -1,6 +1,6 @@
-# langolier-news
+# langolier-api
 
-A simple news aggregator written in Rust.
+API for Langolier, a personal digital garden and AI assistant.
 
 ## Usage
 

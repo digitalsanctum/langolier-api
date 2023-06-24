@@ -10,7 +10,7 @@ COPY . .
 RUN ls -la .
 
 # Build the release version of the microservice
-RUN cargo build --release --bin langolier-news
+RUN cargo build --release --bin langolier-api
 
 # Stage 2: Serve
 FROM debian:buster-slim
@@ -27,11 +27,11 @@ RUN useradd -ms /bin/bash appuser
 WORKDIR /app
 
 # Copy the binary from the builder stage
-COPY --from=builder /usr/src/app/target/release/langolier-news ./langolier-news
+COPY --from=builder /usr/src/app/target/release/langolier-api ./langolier-api
 
 # Set the ownership and permissions for the binary
-RUN chown appuser:appuser ./langolier-news && \
-    chmod 755 ./langolier-news
+RUN chown appuser:appuser ./langolier-api && \
+    chmod 755 ./langolier-api
 
 # Switch to the appuser
 USER appuser
@@ -41,4 +41,4 @@ EXPOSE 3000
 EXPOSE 8080
 
 # Start the application
-CMD ["./langolier-news"]
+CMD ["./langolier-api"]

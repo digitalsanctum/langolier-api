@@ -24,6 +24,8 @@ mod db;
 mod models;
 mod http;
 mod config;
+mod fetcher;
+mod extractor;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -36,10 +38,6 @@ async fn main() -> anyhow::Result<()> {
     let config = Config::parse();
 
     let db = PgPoolOptions::new()
-        // The default connection limit for a Postgres server is 100 connections, minus 3 for superusers.
-        // Since we're using the default superuser we don't have to worry about this too much,
-        // although we should leave some connections available for manual access.
-        //
         // If you're deploying your application with multiple replicas, then the total
         // across all replicas should not exceed the Postgres connection limit.
         .max_connections(50)
@@ -50,19 +48,6 @@ async fn main() -> anyhow::Result<()> {
     http::serve(config, db).await?;
 
     Ok(())
-
-    /*let app = Router::new()
-        .route("/", get(home_handler))
-        .with_state(pool)
-        ;
-
-
-    tokio::join!(
-        
-        serve(using_serve_dir(), 3000),
-        
-        serve(app, 8080)
-    );*/
 }
 
 async fn home_handler(State(pool): State<PgPool>) -> Result<Vec<SourceType>, (StatusCode, String)> {

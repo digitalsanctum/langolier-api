@@ -5,10 +5,7 @@ services:
     build: .
     ports:
       - "8080:8080"
-
       - "3000:3000"
-
-
     environment:
       - DATABASE_URL=postgres://shane:s0crat3s@localhost/zipnews
 #    depends_on:

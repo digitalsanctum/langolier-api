@@ -12,12 +12,12 @@ use tower_http::cors::{Any, CorsLayer};
 
 mod news;
 mod error;
+mod fetcher;
 
 pub use error::{Error, ResultExt};
 
 pub type Result<T, E = Error> = std::result::Result<T, E>;
 
-use tower_http::trace::TraceLayer;
 
 #[derive(Clone)]
 pub(crate) struct ApiContext {
@@ -52,6 +52,7 @@ fn api_router(api_context: ApiContext) -> Router {
         .allow_origin(Any);
 
     Router::new()
+        .merge(fetcher::router())
         .merge(news::router())
         // .layer(TraceLayer::new_for_http())
         .layer(cors_layer)

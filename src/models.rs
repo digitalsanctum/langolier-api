@@ -22,6 +22,11 @@ impl SourceType {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, serde::Deserialize)]
+pub(crate) struct SourceTypePatch {
+    pub name: String,
+}
+
 #[derive(Debug, Clone, PartialEq, sqlx::FromRow, serde::Serialize)]
 pub(crate) struct Source {
     pub id: uuid::Uuid,

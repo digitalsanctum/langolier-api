@@ -3,18 +3,22 @@ use axum::{Json, Router};
 use axum::extract::{Path, State};
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
-use axum::routing::{delete, get};
+use axum::routing::{get};
 use serde_json::json;
 
 use crate::db;
 use crate::db::source_type_by_id;
 use crate::http::{ApiContext, Result};
-use crate::models::{Feed, NewsItem, Source, SourceType};
+use crate::models::{Feed, NewsItem, Source, SourceType, SourceTypePatch};
 
 pub(crate) fn router() -> Router<ApiContext> {
     Router::new()
         .route("/api/source_types", get(list_source_types).post(post_source_types))
-        .route("/api/source_types/:id", get(get_source_type).delete(delete_source_type))
+        .route("/api/source_types/:id",
+               get(get_source_type)
+            .delete(delete_source_type)
+            .patch(patch_source_type)
+        )
         .route("/api/feeds", get(get_feeds))
         .route("/api/sources", get(get_sources))
         .route("/api/news", get(get_news))
@@ -123,7 +127,40 @@ async fn get_source_type(ctx: State<ApiContext>,
             });
             Err((StatusCode::NOT_FOUND, Json(error_response)))
         }
+    };
+}
+
+async fn patch_source_type(
+    ctx: State<ApiContext>,
+    Path(id): Path<i32>,
+    Json(patch): Json<SourceTypePatch>,
+) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
+    let query_result = source_type_by_id(&ctx.db, &id).await;
+
+    if query_result.is_err() {
+        let error_response = json!({
+            "status": "error",
+            "message": format!("source_type with id: {} not found", id)
+        });
+        return Err((StatusCode::NOT_FOUND, Json(error_response)));
     }
+
+    let source_type = query_result.unwrap();
+
+    let query_result = db::update_source_type(&ctx.db, &source_type.id, &patch.name).await;
+
+    return match query_result {
+        Ok(source_type) => {
+            let response = json!({"status": "success","source_type": source_type});
+            Ok(Json(response))
+        }
+        Err(err) => {
+            Err((
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(json!({"status": "error", "message": format!("{:?}", err)})),
+            ))
+        }
+    };
 }
 
 async fn delete_source_type(

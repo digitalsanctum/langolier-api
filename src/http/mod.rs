@@ -6,8 +6,9 @@ use std::{
     net::{Ipv4Addr, SocketAddr},
     sync::Arc,
 };
-use axum::http::header::CONTENT_TYPE;
+use axum::http::header::{ACCEPT, CONTENT_TYPE};
 use axum::http::Method;
+use reqwest::header::AUTHORIZATION;
 use tower_http::cors::{Any, CorsLayer};
 use tower_http::trace::TraceLayer;
 
@@ -46,11 +47,9 @@ fn api_router(api_context: ApiContext) -> Router {
 
     // TODO for dev only
     let cors_layer = CorsLayer::new()
-        .allow_headers([CONTENT_TYPE])
-        // allow `GET` and `POST` when accessing the resource
-        .allow_methods([Method::GET, Method::POST])
-        // .allow_origin("http://localhost:5173".parse::<axum::http::HeaderValue>().unwrap());
-        // allow requests from any origin
+        .allow_headers([ACCEPT, AUTHORIZATION, CONTENT_TYPE])
+        // .allow_credentials(true)
+        .allow_methods([Method::GET, Method::POST, Method::PATCH, Method::DELETE])
         .allow_origin(Any);
 
     Router::new()

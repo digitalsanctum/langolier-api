@@ -1,6 +1,6 @@
 use std::env;
 use sqlx::{Error, Pool, Postgres, query_as};
-use sqlx::postgres::PgPoolOptions;
+use sqlx::postgres::{PgPoolOptions, PgQueryResult};
 use crate::models::{Feed, NewsItem, Source, SourceType};
 
 #[allow(dead_code)]
@@ -17,10 +17,21 @@ pub(crate) async fn sources(pool: &Pool<Postgres>) -> Result<Vec<Source>, Error>
         .await
 }
 
-#[allow(dead_code)]
 pub(crate) async fn source_type_by_id(pool: &Pool<Postgres>, id: &i32) -> Result<SourceType, Error> {
     query_as!(SourceType, r#"SELECT * FROM source_type WHERE id = $1"#, id)
         .fetch_one(&*pool)
+        .await
+}
+
+pub(crate) async fn update_source_type(pool: &Pool<Postgres>, id: &i32, name: &String) -> Result<SourceType, Error> {
+    query_as!(SourceType, r#"UPDATE source_type SET name = $1 WHERE id = $2 RETURNING *"#, name, id)
+        .fetch_one(&*pool)
+        .await
+}
+
+pub(crate) async fn delete_source_type(pool: &Pool<Postgres>, id: &i32) -> Result<PgQueryResult, Error> {
+    sqlx::query!("DELETE FROM source_type WHERE id = $1", id)
+        .execute(&*pool)
         .await
 }
 

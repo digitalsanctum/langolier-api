@@ -1,5 +1,5 @@
 use std::env;
-use sqlx::{Pool, Postgres, query_as};
+use sqlx::{Error, Pool, Postgres, query_as};
 use sqlx::postgres::PgPoolOptions;
 use crate::models::{Feed, NewsItem, Source, SourceType};
 
@@ -38,13 +38,10 @@ pub(crate) async fn news(pool: &Pool<Postgres>) -> Result<Vec<NewsItem>, sqlx::E
         .await
 }
 
-#[allow(dead_code)]
-pub(crate) async fn save_source_type(source_type: &SourceType) -> anyhow::Result<i32> {
-    let pool: Pool<Postgres> = get_pool().await;
-    let rec = sqlx::query!("INSERT INTO source_type (id, name) VALUES ($1, $2) RETURNING id", source_type.id, source_type.name)
-        .fetch_one(&pool)
-        .await?;
-    Ok(rec.id)
+pub(crate) async fn save_source_type(pool: &Pool<Postgres>, name: &String) -> Result<SourceType, Error> {
+    return sqlx::query_as!(SourceType, "INSERT INTO source_type (name) VALUES ($1) RETURNING *", name)
+        .fetch_one(pool)
+        .await
 }
 
 pub(crate) async fn get_pool() -> Pool<Postgres> {

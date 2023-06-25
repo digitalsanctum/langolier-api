@@ -1,26 +1,24 @@
 use chrono::Utc;
-use sqlx::{Pool, Postgres};
+use sqlx::{Error, Pool, Postgres};
 use crate::db;
 
 #[derive(Debug, Clone, PartialEq, Eq, sqlx::FromRow, serde::Serialize)]
 pub(crate) struct SourceType {
     pub id: i32,
     pub name: String,
-    pub description: Option<String>,
 }
 
 #[allow(dead_code)]
 impl SourceType {
-    pub fn new(id: i32, name: String, description: Option<String>) -> Self {
+    pub fn new(id: i32, name: String) -> Self {
         Self {
             id,
             name,
-            description,
         }
     }
 
-    pub async fn save(&self) -> anyhow::Result<i32> {
-        db::save_source_type(self).await
+    pub async fn save(&self, pool: &Pool<Postgres>) -> Result<SourceType, Error> {
+        db::save_source_type(pool, &self.name).await
     }
 }
 

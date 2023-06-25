@@ -11,28 +11,28 @@ pub(crate) async fn source_types(pool: &Pool<Postgres>) -> Result<Vec<SourceType
 }
 
 #[allow(dead_code)]
-pub(crate) async fn sources(pool: &Pool<Postgres>) -> Result<Vec<Source>, sqlx::Error> {
+pub(crate) async fn sources(pool: &Pool<Postgres>) -> Result<Vec<Source>, Error> {
     query_as!(Source, r#"SELECT * FROM source"#)
         .fetch_all(&*pool)
         .await
 }
 
 #[allow(dead_code)]
-pub(crate) async fn source_type_by_name(pool: &Pool<Postgres>, name: &str) -> Result<SourceType, sqlx::Error> {
-    query_as!(SourceType, r#"SELECT * FROM source_type WHERE name = $1"#, name)
+pub(crate) async fn source_type_by_id(pool: &Pool<Postgres>, id: &i32) -> Result<SourceType, Error> {
+    query_as!(SourceType, r#"SELECT * FROM source_type WHERE id = $1"#, id)
         .fetch_one(&*pool)
         .await
 }
 
 #[allow(dead_code)]
-pub(crate) async fn feeds(pool: &Pool<Postgres>) -> Result<Vec<Feed>, sqlx::Error> {
+pub(crate) async fn feeds(pool: &Pool<Postgres>) -> Result<Vec<Feed>, Error> {
     query_as!(Feed, r#"SELECT * FROM feed"#)
         .fetch_all(&*pool)
         .await
 }
 
 #[allow(dead_code)]
-pub(crate) async fn news(pool: &Pool<Postgres>) -> Result<Vec<NewsItem>, sqlx::Error> {
+pub(crate) async fn news(pool: &Pool<Postgres>) -> Result<Vec<NewsItem>, Error> {
     query_as!(NewsItem, r#"SELECT * FROM news"#)
         .fetch_all(&*pool)
         .await

@@ -1,4 +1,3 @@
-use std::sync::Arc;
 use anyhow::Context;
 use axum::{Json, Router};
 use axum::extract::{Path, State};
@@ -8,13 +7,14 @@ use axum::routing::{delete, get};
 use serde_json::json;
 
 use crate::db;
+use crate::db::source_type_by_id;
 use crate::http::{ApiContext, Result};
 use crate::models::{Feed, NewsItem, Source, SourceType};
 
 pub(crate) fn router() -> Router<ApiContext> {
     Router::new()
-        .route("/api/source_types", get(get_source_types).post(post_source_types))
-        .route("/api/source_types/:id", delete(delete_source_type))
+        .route("/api/source_types", get(list_source_types).post(post_source_types))
+        .route("/api/source_types/:id", get(get_source_type).delete(delete_source_type))
         .route("/api/feeds", get(get_feeds))
         .route("/api/sources", get(get_sources))
         .route("/api/news", get(get_news))
@@ -61,7 +61,7 @@ async fn get_sources(ctx: State<ApiContext>) -> Result<Json<SourcesBody>> {
     }))
 }
 
-async fn get_source_types(ctx: State<ApiContext>) -> Result<Json<SourceTypesBody>> {
+async fn list_source_types(ctx: State<ApiContext>) -> Result<Json<SourceTypesBody>> {
     let vec = db::source_types(&ctx.db).await.context("Failed to get news").unwrap();
     Ok(Json(SourceTypesBody {
         types: vec,
@@ -104,6 +104,26 @@ async fn post_source_types(
             ))
         }
     };
+}
+
+async fn get_source_type(ctx: State<ApiContext>,
+                         Path(id): Path<i32>,
+) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
+    let query_result = source_type_by_id(&ctx.db, &id).await;
+
+    return match query_result {
+        Ok(source_type) => {
+            let response = json!(source_type);
+            Ok(Json(response))
+        }
+        Err(_) => {
+            let error_response = json!({
+                "status": "error",
+                "message": format!("source_type with id: {} not found", id)
+            });
+            Err((StatusCode::NOT_FOUND, Json(error_response)))
+        }
+    }
 }
 
 async fn delete_source_type(

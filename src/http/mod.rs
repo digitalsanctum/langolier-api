@@ -9,8 +9,9 @@ use std::{
 use axum::http::header::CONTENT_TYPE;
 use axum::http::Method;
 use tower_http::cors::{Any, CorsLayer};
+use tower_http::trace::TraceLayer;
 
-mod news;
+mod api;
 mod error;
 mod fetcher;
 
@@ -27,13 +28,14 @@ pub(crate) struct ApiContext {
 
 pub async fn serve(config: Config, db: PgPool) -> anyhow::Result<()> {
     let api_context = ApiContext {
-        config: Arc::new(config),
+        config: Arc::new(config.clone()),
         db,
     };
 
     let app = api_router(api_context);
+    let port = &config.port.or(Some(8080)).unwrap();
 
-    let addr = SocketAddr::from((Ipv4Addr::UNSPECIFIED, 8080));
+    let addr = SocketAddr::from((Ipv4Addr::UNSPECIFIED, *port));
     axum::Server::bind(&addr)
         .serve(app.into_make_service())
         .await
@@ -53,8 +55,8 @@ fn api_router(api_context: ApiContext) -> Router {
 
     Router::new()
         .merge(fetcher::router())
-        .merge(news::router())
-        // .layer(TraceLayer::new_for_http())
+        .merge(api::router())
+        .layer(TraceLayer::new_for_http())
         .layer(cors_layer)
         .with_state(api_context)
 }

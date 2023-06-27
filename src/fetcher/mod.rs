@@ -15,11 +15,15 @@ use url::Url;
 use webpage::{Webpage, WebpageOptions};
 use crate::extractor::extract_text_from_str;
 use crate::{db, models};
-use crate::models::Source;
+use crate::models::{WebpageRequest, WebpageResponse, Source};
 
 // use crate::extract::extract_text_from_str;
 // use crate::models::Source;
 
+pub(crate) async fn fetch_url(req: &WebpageRequest) -> Result<Webpage, Error> {
+    let html_options = WebpageOptions { allow_insecure: true, ..Default::default() };
+    Webpage::from_url(&*req.url, html_options)
+}
 
 async fn fetch() -> Result<(), Error> {
     let args: Vec<String> = env::args().collect();

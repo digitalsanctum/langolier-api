@@ -86,11 +86,11 @@ async fn post_source_types(
 
     return match query_result {
         Ok(source_type) => {
-            let note_response = json!({"status": "success","data": json!({
+            let source_type_response = json!({"status": "success","data": json!({
                 "source_type": source_type
             })});
 
-            Ok((StatusCode::CREATED, Json(note_response)))
+            Ok((StatusCode::CREATED, Json(source_type_response)))
         }
         Err(e) => {
             if e.to_string()

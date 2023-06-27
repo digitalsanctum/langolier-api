@@ -1,6 +1,40 @@
 use chrono::Utc;
 use sqlx::{Error, Pool, Postgres};
+use webpage::Webpage;
 use crate::db;
+
+#[derive(Debug, Clone, PartialEq, sqlx::FromRow, serde::Deserialize, serde::Serialize)]
+pub(crate) struct WebpageRequest {
+    pub url: String,
+    pub persist: bool,
+}
+
+impl WebpageRequest {
+    pub fn new(url: String, persist: bool) -> Self {
+        Self {
+            url,
+            persist,
+        }
+    }
+}
+
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub(crate) struct WebpageResponse {
+    pub request: WebpageRequest,
+    pub webpage: Webpage,
+    pub create_timestamp: chrono::DateTime<Utc>,
+}
+
+impl WebpageResponse {
+    pub fn new(request: WebpageRequest, webpage: Webpage) -> Self {
+        Self {
+            request,
+            webpage,
+            create_timestamp: Utc::now(),
+        }
+    }
+}
+
 
 #[derive(Debug, Clone, PartialEq, Eq, sqlx::FromRow, serde::Serialize)]
 pub(crate) struct SourceType {

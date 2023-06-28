@@ -6,10 +6,10 @@ use axum::response::IntoResponse;
 use axum::routing::{get};
 use serde_json::json;
 
-use crate::db;
+use crate::{db, models};
 use crate::db::source_type_by_id;
 use crate::http::{ApiContext, Result};
-use crate::models::{Feed, NewsItem, Source, SourceType, SourceTypePatch};
+use crate::models::{Company, Feed, NewsItem, Source, SourceType, SourceTypePatch};
 
 pub(crate) fn router() -> Router<ApiContext> {
     Router::new()
@@ -22,6 +22,7 @@ pub(crate) fn router() -> Router<ApiContext> {
         .route("/api/feeds", get(get_feeds))
         .route("/api/sources", get(get_sources))
         .route("/api/news", get(get_news))
+        .route("/api/companies", get(get_company).post(post_company))
 }
 
 #[derive(serde::Serialize)]
@@ -37,6 +38,11 @@ struct FeedsBody {
 #[derive(serde::Serialize)]
 struct NewsBody {
     news: Vec<NewsItem>,
+}
+
+#[derive(serde::Serialize)]
+struct CompanyBody {
+    companies: Vec<Company>,
 }
 
 #[derive(serde::Serialize)]
@@ -58,6 +64,13 @@ async fn get_news(ctx: State<ApiContext>) -> Result<Json<NewsBody>> {
     }))
 }
 
+async fn get_company(ctx: State<ApiContext>) -> Result<Json<CompanyBody>> {
+    let companies = db::companies(&ctx.db).await.context("Failed to get companies").unwrap();
+    Ok(Json(CompanyBody {
+        companies,
+    }))
+}
+
 async fn get_sources(ctx: State<ApiContext>) -> Result<Json<SourcesBody>> {
     let sources = db::sources(&ctx.db).await.context("Failed to get sources").unwrap();
     Ok(Json(SourcesBody {
@@ -75,6 +88,43 @@ async fn list_source_types(ctx: State<ApiContext>) -> Result<Json<SourceTypesBod
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 struct CreateSourceTypeRequest {
     name: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+struct CreateCompanyRequest {
+    name: String,
+}
+
+async fn post_company(
+    ctx: State<ApiContext>,
+    Json(body): Json<CreateCompanyRequest>,
+) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
+    let query_result = db::save_company(&ctx.db, &body.name).await;
+
+    return match query_result {
+        Ok(company) => {
+            let company_response = json!({"status": "success","data": json!({
+                "company": company
+            })});
+
+            Ok((StatusCode::CREATED, Json(company_response)))
+        }
+        Err(e) => {
+            if e.to_string()
+                .contains("duplicate key value violates unique constraint")
+            {
+                let error_response = serde_json::json!({
+                    "status": "error",
+                    "message": "company already exists",
+                });
+                return Err((StatusCode::CONFLICT, Json(error_response)));
+            }
+            Err((
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(json!({"status": "error","message": format!("{:?}", e)})),
+            ))
+        }
+    };
 }
 
 // create an async function to handle post

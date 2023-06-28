@@ -3,6 +3,42 @@ use sqlx::{Error, Pool, Postgres};
 use webpage::Webpage;
 use crate::db;
 
+
+#[derive(Debug, Clone, PartialEq, sqlx::FromRow, serde::Deserialize, serde::Serialize)]
+pub(crate) struct Company {
+    pub id: uuid::Uuid,
+    pub name: String,
+    pub url: Option<String>,
+    pub ticker: Option<String>,
+    pub indeed_rating: Option<String>,
+    pub glassdoor_rating: Option<String>,
+    pub create_timestamp: chrono::DateTime<Utc>,
+    pub update_timestamp: chrono::DateTime<Utc>,
+}
+
+impl Company {
+    pub fn new(name: String,
+               url: Option<String>,
+               ticker: Option<String>,
+               indeed_rating: Option<String>,
+               glassdoor_rating: Option<String>,
+               create_timestamp: chrono::DateTime<Utc>,
+               update_timestamp: chrono::DateTime<Utc>
+    ) -> Self {
+        Self {
+            id: uuid::Uuid::new_v4(),
+            name,
+            url,
+            ticker,
+            indeed_rating,
+            glassdoor_rating,
+            create_timestamp,
+            update_timestamp,
+        }
+    }
+}
+
+
 #[derive(Debug, Clone, PartialEq, sqlx::FromRow, serde::Deserialize, serde::Serialize)]
 pub(crate) struct WebpageRequest {
     pub url: String,

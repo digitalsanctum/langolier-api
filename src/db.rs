@@ -1,10 +1,17 @@
 use std::env;
 use sqlx::{Error, Pool, Postgres, query_as};
 use sqlx::postgres::{PgPoolOptions, PgQueryResult};
-use crate::models::{Feed, NewsItem, Source, SourceType};
+use crate::models::{Company, Feed, NewsItem, Source, SourceType};
 
 #[allow(dead_code)]
-pub(crate) async fn source_types(pool: &Pool<Postgres>) -> Result<Vec<SourceType>, sqlx::Error> {
+pub(crate) async fn companies(pool: &Pool<Postgres>) -> Result<Vec<Company>, Error> {
+    query_as!(Company, "select * from company")
+        .fetch_all(&*pool)
+        .await
+}
+
+#[allow(dead_code)]
+pub(crate) async fn source_types(pool: &Pool<Postgres>) -> Result<Vec<SourceType>, Error> {
     query_as!(SourceType, "select * from source_type")
         .fetch_all(&*pool)
         .await
@@ -46,6 +53,12 @@ pub(crate) async fn feeds(pool: &Pool<Postgres>) -> Result<Vec<Feed>, Error> {
 pub(crate) async fn news(pool: &Pool<Postgres>) -> Result<Vec<NewsItem>, Error> {
     query_as!(NewsItem, r#"SELECT * FROM news"#)
         .fetch_all(&*pool)
+        .await
+}
+
+pub(crate) async fn save_company(pool: &Pool<Postgres>, name: &String) -> Result<Company, Error> {
+    return sqlx::query_as!(Company, "INSERT INTO company (name) VALUES ($1) RETURNING *", name)
+        .fetch_one(pool)
         .await
 }
 

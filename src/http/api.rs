@@ -3,7 +3,7 @@ use axum::{Json, Router};
 use axum::extract::{Path, State};
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
-use axum::routing::{get};
+use axum::routing::{delete, get};
 use serde_json::json;
 
 use crate::{db, models};
@@ -23,6 +23,7 @@ pub(crate) fn router() -> Router<ApiContext> {
         .route("/api/sources", get(get_sources))
         .route("/api/news", get(get_news))
         .route("/api/companies", get(get_company).post(post_company))
+        .route("/api/companies/:id", delete(delete_company))
 }
 
 #[derive(serde::Serialize)]
@@ -227,6 +228,27 @@ async fn delete_source_type(
         let error_response = serde_json::json!({
             "status": "error",
             "message": format!("source_type with id: {} not found", id)
+        });
+        return Err((StatusCode::NOT_FOUND, Json(error_response)));
+    }
+
+    Ok(StatusCode::NO_CONTENT)
+}
+
+async fn delete_company(
+    ctx: State<ApiContext>,
+    Path(id): Path<uuid::Uuid>,
+) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
+    let rows_affected = sqlx::query!("DELETE FROM company WHERE id = $1", id)
+        .execute(&ctx.db)
+        .await
+        .unwrap()
+        .rows_affected();
+
+    if rows_affected == 0 {
+        let error_response = serde_json::json!({
+            "status": "error",
+            "message": format!("company with id: {} not found", id)
         });
         return Err((StatusCode::NOT_FOUND, Json(error_response)));
     }

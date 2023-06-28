@@ -5,7 +5,7 @@ use crate::models::{Company, Feed, NewsItem, Source, SourceType};
 
 #[allow(dead_code)]
 pub(crate) async fn companies(pool: &Pool<Postgres>) -> Result<Vec<Company>, Error> {
-    query_as!(Company, "select * from company")
+    query_as!(Company, "select * from company order by name")
         .fetch_all(&*pool)
         .await
 }

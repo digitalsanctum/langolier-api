@@ -5,7 +5,7 @@ use crate::db;
 
 
 #[derive(Debug, Clone, PartialEq, sqlx::FromRow, serde::Deserialize, serde::Serialize)]
-pub(crate) struct Company {
+pub struct Company {
     pub id: uuid::Uuid,
     pub name: String,
     pub url: Option<String>,

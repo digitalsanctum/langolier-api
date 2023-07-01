@@ -27,12 +27,16 @@ pub type Result<T, E = Error> = std::result::Result<T, E>;
 pub(crate) struct ApiContext {
     config: Arc<Config>,
     db: PgPool,
+    nc: nats::Connection,
 }
 
-pub async fn serve(config: Config, db: PgPool) -> anyhow::Result<()> {
+pub async fn serve(config: Config,
+                   db: PgPool,
+                   nc: nats::Connection) -> anyhow::Result<()> {
     let api_context = ApiContext {
         config: Arc::new(config.clone()),
         db,
+        nc,
     };
 
     let app = api_router(api_context);

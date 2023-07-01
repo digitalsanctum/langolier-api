@@ -6,10 +6,11 @@ use axum::response::IntoResponse;
 use axum::routing::{delete, get};
 use serde_json::json;
 
-use crate::{db, models};
+use crate::{db};
 use crate::db::source_type_by_id;
 use crate::http::{ApiContext, Result};
 use crate::models::{Company, Feed, NewsItem, Source, SourceType, SourceTypePatch};
+use crate::tasks::CompanyPayload;
 
 pub(crate) fn router() -> Router<ApiContext> {
     Router::new()
@@ -104,6 +105,14 @@ async fn post_company(
 
     return match query_result {
         Ok(company) => {
+
+            let subject = "company_created";
+            let payload = CompanyPayload {
+                company: company.clone(),
+            };
+            let payload_bytes = serde_json::to_vec(&json!(payload)).expect("Failed to serialize CompanyPayload");
+            ctx.nc.publish(subject.into(), payload_bytes).expect("Failed to publish company_created");
+
             let company_response = json!({"status": "success","data": json!({
                 "company": company
             })});

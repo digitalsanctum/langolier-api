@@ -19,6 +19,7 @@ use crate::models::{Source, SourceType};
 
 use clap::Parser;
 use tracing::Subscriber;
+use crate::tasks::CompanyPayload;
 
 mod static_support;
 
@@ -28,6 +29,7 @@ mod http;
 mod config;
 mod fetcher;
 mod extractor;
+mod tasks;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -45,16 +47,38 @@ async fn main() -> anyhow::Result<()> {
         .connect(&config.database_url)
         .await
         .context("could not connect to database_url")?;
+    tracing::info!("connected to database");
 
-    http::serve(config, db).await?;
+    // using sync NATS client for now
+    let nats_client = nats::connect(&config.nats_url)
+        .context("could not connect to nats_url")?;
+    tracing::info!("connected to nats server");
+
+    tokio::task::spawn({
+        let conn = nats_client.clone();
+        async move {
+            let mut maybe_sub = conn.subscribe("company_created".into());
+            match maybe_sub {
+                Ok(sub) => {
+                    let mut subscriber = sub;
+                    tracing::info!("Awaiting messages on company_created");
+
+                    while let Some(message) = subscriber.next() {
+                        let maybe_payload = serde_json::from_slice::<CompanyPayload>(&message.data);
+                        match maybe_payload {
+                            Ok(payload) => tracing::info!("Received payload {payload:?}"),
+                            Err(err) => tracing::error!("Error parsing payload: {err}")
+                        }
+                    }
+                }
+                Err(err) => tracing::error!("Error subscribing to company_created: {err}")
+            }
+        }
+    });
+
+    http::serve(config, db, nats_client).await?;
 
     Ok(())
-}
-
-async fn home_handler(State(pool): State<PgPool>) -> Result<Vec<SourceType>, (StatusCode, String)> {
-    db::source_types(&pool)
-        .await
-        .map_err(internal_error)
 }
 
 async fn serve(app: Router, port: u16) {

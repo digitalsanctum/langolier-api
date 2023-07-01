@@ -44,6 +44,9 @@ chrono = { version = "0.4.26", features = ["serde"] }
 anyhow = "1"
 thiserror = "1.0.30"
 
+# tasks deps
+nats = "0.24.0"
+
 # fetcher deps
 atom_syndication = { version = "0.12", features = ["with-serde"] }
 bytes = "1.4.0"

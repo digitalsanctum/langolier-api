@@ -10,11 +10,14 @@
 /// See `.env.sample` in the repository root for details.
 #[derive(clap::Parser, Debug, Clone, PartialEq)]
 pub struct Config {
-    /// The connection URL for the Postgres database this application should use.
-    #[clap(long, env)]
+    /// The connection URL for the Postgres database.
+    #[clap(long, env )]
     pub database_url: String,
 
     #[clap(long, env)]
     pub port: Option<u16>,
 
+    /// The connection URL for the NATS server.
+    #[clap(long, env, default_value = "nats://localhost:4222")]
+    pub nats_url: String,
 }

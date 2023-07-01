@@ -10,6 +10,14 @@ Requires the following environment variables:
 DATABASE_URL=postgres://shane:s0crat3s@localhost/zipnews;RUST_LOG=info
 ```
 
+## NATS
+
+This project uses NATS for messaging. To run NATS locally, use the following command:
+
+```shell
+docker run -d -p 4222:4222 --name nats-server nats:latest
+```
+
 
 ## References
 

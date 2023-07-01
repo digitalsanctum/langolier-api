@@ -10,7 +10,9 @@ use axum::http::header::{ACCEPT, CONTENT_TYPE};
 use axum::http::Method;
 use reqwest::header::AUTHORIZATION;
 use tower_http::cors::{Any, CorsLayer};
+use tower_http::trace;
 use tower_http::trace::TraceLayer;
+use tracing::Level;
 
 mod api;
 mod error;
@@ -52,10 +54,16 @@ fn api_router(api_context: ApiContext) -> Router {
         .allow_methods([Method::GET, Method::POST, Method::PATCH, Method::DELETE])
         .allow_origin(Any);
 
+    let tracing_layer = TraceLayer::new_for_http()
+        .make_span_with(trace::DefaultMakeSpan::new()
+            .level(Level::INFO))
+        .on_response(trace::DefaultOnResponse::new()
+            .level(Level::INFO));
+
     Router::new()
         .merge(fetcher::router())
         .merge(api::router())
-        .layer(TraceLayer::new_for_http())
+        .layer(tracing_layer)
         .layer(cors_layer)
         .with_state(api_context)
 }

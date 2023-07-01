@@ -18,6 +18,8 @@ use crate::config::Config;
 use crate::models::{Source, SourceType};
 
 use clap::Parser;
+use tracing::Subscriber;
+
 mod static_support;
 
 mod db;
@@ -29,9 +31,8 @@ mod extractor;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    tracing_subscriber::registry()
-        .with(tracing_subscriber::fmt::layer())
-        .init();
+
+    tracing_subscriber::fmt().compact().with_target(false).init();
 
     // Parse our configuration from the environment.
     // This will exit with a help message if something is wrong.

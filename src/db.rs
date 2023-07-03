@@ -1,7 +1,7 @@
 use std::env;
 use sqlx::{Error, Pool, Postgres, query_as};
 use sqlx::postgres::{PgPoolOptions, PgQueryResult};
-use crate::models::{Company, Feed, NewsItem, Source, SourceType};
+use crate::models::{Company, Feed, Garden, NewsItem, Page, Source, SourceType, Tool};
 
 #[allow(dead_code)]
 pub(crate) async fn companies(pool: &Pool<Postgres>) -> Result<Vec<Company>, Error> {
@@ -18,9 +18,43 @@ pub(crate) async fn source_types(pool: &Pool<Postgres>) -> Result<Vec<SourceType
 }
 
 #[allow(dead_code)]
+pub(crate) async fn tools(pool: &Pool<Postgres>) -> Result<Vec<Tool>, Error> {
+    query_as!(Tool, r#"SELECT * FROM tool"#)
+        .fetch_all(&*pool)
+        .await
+}
+
+#[allow(dead_code)]
 pub(crate) async fn sources(pool: &Pool<Postgres>) -> Result<Vec<Source>, Error> {
     query_as!(Source, r#"SELECT * FROM source"#)
         .fetch_all(&*pool)
+        .await
+}
+
+pub(crate) async fn garden_by_slug(pool: &Pool<Postgres>, slug: &String) -> Result<Garden, Error> {
+    query_as!(Garden, r#"SELECT * FROM garden WHERE slug = $1"#, slug)
+        .fetch_one(&*pool)
+        .await
+}
+
+pub(crate) async fn garden_by_id(pool: &Pool<Postgres>, id: &uuid::Uuid) -> Result<Garden, Error> {
+    query_as!(Garden, r#"SELECT * FROM garden WHERE id = $1"#, id)
+        .fetch_one(&*pool)
+        .await
+}
+
+pub(crate) async fn pages_by_garden_slug(pool: &Pool<Postgres>, slug: &String) -> Result<Vec<Page>, Error> {
+    query_as!(Page, r#"SELECT page.*
+FROM garden
+inner join page on page.garden_id = garden.id
+WHERE garden.slug = $1"#, slug)
+        .fetch_all(&*pool)
+        .await
+}
+
+pub(crate) async fn page_by_id(pool: &Pool<Postgres>, id: &uuid::Uuid) -> Result<Page, Error> {
+    query_as!(Page, r#"SELECT * FROM page WHERE id = $1"#, id)
+        .fetch_one(&*pool)
         .await
 }
 
@@ -42,6 +76,18 @@ pub(crate) async fn delete_source_type(pool: &Pool<Postgres>, id: &i32) -> Resul
         .await
 }
 
+pub(crate) async fn gardens(pool: &Pool<Postgres>) -> Result<Vec<Garden>, Error> {
+    query_as!(Garden, r#"SELECT * FROM garden"#)
+        .fetch_all(&*pool)
+        .await
+}
+
+pub(crate) async fn pages(pool: &Pool<Postgres>) -> Result<Vec<Page>, Error> {
+    query_as!(Page, r#"SELECT * FROM page"#)
+        .fetch_all(&*pool)
+        .await
+}
+
 #[allow(dead_code)]
 pub(crate) async fn feeds(pool: &Pool<Postgres>) -> Result<Vec<Feed>, Error> {
     query_as!(Feed, r#"SELECT * FROM feed"#)
@@ -56,8 +102,8 @@ pub(crate) async fn news(pool: &Pool<Postgres>) -> Result<Vec<NewsItem>, Error> 
         .await
 }
 
-pub(crate) async fn save_company(pool: &Pool<Postgres>, name: &String) -> Result<Company, Error> {
-    return sqlx::query_as!(Company, "INSERT INTO company (name) VALUES ($1) RETURNING *", name)
+pub(crate) async fn save_company(pool: &Pool<Postgres>, name: &String, url: Option<String>) -> Result<Company, Error> {
+    return sqlx::query_as!(Company, "INSERT INTO company (name, url) VALUES ($1, $2) RETURNING *", name, url.unwrap_or("".to_string()))
         .fetch_one(pool)
         .await
 }

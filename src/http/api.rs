@@ -7,9 +7,9 @@ use axum::routing::{delete, get};
 use serde_json::json;
 
 use crate::{db};
-use crate::db::source_type_by_id;
+use crate::db::{garden_by_id, garden_by_slug, page_by_id, pages_by_garden_slug, source_type_by_id};
 use crate::http::{ApiContext, Result};
-use crate::models::{Company, Feed, NewsItem, Source, SourceType, SourceTypePatch};
+use crate::models::{Company, Feed, Garden, NewsItem, Page, Source, SourceType, SourceTypePatch, Tool};
 use crate::tasks::CompanyPayload;
 
 pub(crate) fn router() -> Router<ApiContext> {
@@ -17,11 +17,18 @@ pub(crate) fn router() -> Router<ApiContext> {
         .route("/api/source_types", get(list_source_types).post(post_source_types))
         .route("/api/source_types/:id",
                get(get_source_type)
-            .delete(delete_source_type)
-            .patch(patch_source_type)
+                   .delete(delete_source_type)
+                   .patch(patch_source_type),
         )
+        .route("/api/gardens", get(get_gardens))
+        .route("/api/gardens/:slug", get(get_garden))
+        .route("/api/gardens/:slug/pages", get(get_pages_by_garden_slug))
+        .route("/api/pages", get(get_pages))
+
+        .route("/api/pages/:id", get(get_page))
         .route("/api/feeds", get(get_feeds))
         .route("/api/sources", get(get_sources))
+        .route("/api/tools", get(get_tools))
         .route("/api/news", get(get_news))
         .route("/api/companies", get(get_company).post(post_company))
         .route("/api/companies/:id", delete(delete_company))
@@ -52,6 +59,57 @@ struct SourcesBody {
     sources: Vec<Source>,
 }
 
+#[derive(serde::Serialize)]
+struct ToolsBody {
+    tools: Vec<Tool>,
+}
+
+#[derive(serde::Serialize)]
+struct GardensBody {
+    gardens: Vec<Garden>,
+}
+
+#[derive(serde::Serialize)]
+struct PagesBody {
+    pages: Vec<Page>,
+}
+
+async fn get_pages_by_garden_slug(ctx: State<ApiContext>,
+                                  Path(slug): Path<String>,
+) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
+    let query_result = pages_by_garden_slug(&ctx.db, &slug).await;
+
+    return match query_result {
+        Ok(pages) => {
+            let response = json!(pages);
+            Ok(Json(PagesBody {
+                pages,
+            }))
+        }
+        Err(_) => {
+            let error_response = json!({
+                "status": "error",
+                "message": format!("garden with slug: {} not found", slug)
+            });
+            Err((StatusCode::NOT_FOUND, Json(error_response)))
+        }
+    };
+}
+
+async fn get_pages(ctx: State<ApiContext>) -> Result<Json<PagesBody>> {
+    let pages = db::pages(&ctx.db).await.context("Failed to get pages").unwrap();
+    Ok(Json(PagesBody {
+        pages,
+    }))
+}
+
+async fn get_gardens(ctx: State<ApiContext>) -> Result<Json<GardensBody>> {
+    let gardens = db::gardens(&ctx.db).await.context("Failed to get gardens").unwrap();
+    Ok(Json(GardensBody {
+        gardens,
+    }))
+}
+
 async fn get_feeds(ctx: State<ApiContext>) -> Result<Json<FeedsBody>> {
     let feeds = db::feeds(&ctx.db).await.context("Failed to get feeds").unwrap();
     Ok(Json(FeedsBody {
@@ -70,6 +128,13 @@ async fn get_company(ctx: State<ApiContext>) -> Result<Json<CompanyBody>> {
     let companies = db::companies(&ctx.db).await.context("Failed to get companies").unwrap();
     Ok(Json(CompanyBody {
         companies,
+    }))
+}
+
+async fn get_tools(ctx: State<ApiContext>) -> Result<Json<ToolsBody>> {
+    let tools = db::tools(&ctx.db).await.context("Failed to get tools").unwrap();
+    Ok(Json(ToolsBody {
+        tools,
     }))
 }
 
@@ -95,17 +160,17 @@ struct CreateSourceTypeRequest {
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 struct CreateCompanyRequest {
     name: String,
+    url: Option<String>,
 }
 
 async fn post_company(
     ctx: State<ApiContext>,
     Json(body): Json<CreateCompanyRequest>,
 ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
-    let query_result = db::save_company(&ctx.db, &body.name).await;
+    let query_result = db::save_company(&ctx.db, &body.name, body.url).await;
 
     return match query_result {
         Ok(company) => {
-
             let subject = "company_created";
             let payload = CompanyPayload {
                 company: company.clone(),
@@ -166,6 +231,46 @@ async fn post_source_types(
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Json(json!({"status": "error","message": format!("{:?}", e)})),
             ))
+        }
+    };
+}
+
+async fn get_garden(ctx: State<ApiContext>,
+                    Path(slug): Path<String>,
+) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
+    let query_result = garden_by_slug(&ctx.db, &slug).await;
+
+    return match query_result {
+        Ok(garden) => {
+            let response = json!(garden);
+            Ok(Json(response))
+        }
+        Err(_) => {
+            let error_response = json!({
+                "status": "error",
+                "message": format!("garden with slug: {} not found", slug)
+            });
+            Err((StatusCode::NOT_FOUND, Json(error_response)))
+        }
+    };
+}
+
+async fn get_page(ctx: State<ApiContext>,
+                  Path(id): Path<uuid::Uuid>,
+) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
+    let query_result = page_by_id(&ctx.db, &id).await;
+
+    return match query_result {
+        Ok(page) => {
+            let response = json!(page);
+            Ok(Json(response))
+        }
+        Err(_) => {
+            let error_response = json!({
+                "status": "error",
+                "message": format!("page with id: {} not found", id)
+            });
+            Err((StatusCode::NOT_FOUND, Json(error_response)))
         }
     };
 }

@@ -4,4 +4,3 @@ use crate::models::Company;
 pub struct CompanyPayload {
     pub company: Company,
 }
-

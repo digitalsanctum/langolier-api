@@ -3,6 +3,60 @@ use sqlx::{Error, Pool, Postgres};
 use webpage::Webpage;
 use crate::db;
 
+#[derive(Debug, Clone, PartialEq, sqlx::FromRow, serde::Deserialize, serde::Serialize)]
+pub struct Page {
+    pub id : uuid::Uuid,
+    pub title: String,
+    pub slug: String,
+    pub content: String,
+    pub garden_id: uuid::Uuid,
+    pub published: bool,
+    pub create_timestamp: chrono::DateTime<Utc>,
+    pub update_timestamp: chrono::DateTime<Utc>,
+}
+
+impl Page {
+    pub fn new(title: String,
+               slug: String,
+               content: String,
+               garden_id: uuid::Uuid,
+               published: bool,
+               create_timestamp: chrono::DateTime<Utc>,
+               update_timestamp: chrono::DateTime<Utc>
+    ) -> Self {
+        Self {
+            id: uuid::Uuid::new_v4(),
+            title,
+            slug,
+            content,
+            garden_id,
+            published,
+            create_timestamp,
+            update_timestamp,
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, sqlx::FromRow, serde::Deserialize, serde::Serialize)]
+pub struct Garden {
+    pub id : uuid::Uuid,
+    pub title: String,
+    pub slug: String,
+    pub create_timestamp: chrono::DateTime<Utc>,
+    pub update_timestamp: chrono::DateTime<Utc>,
+}
+
+impl Garden {
+    pub fn new(title: String, slug: String, create_timestamp: chrono::DateTime<Utc>, update_timestamp: chrono::DateTime<Utc>) -> Self {
+        Self {
+            id: uuid::Uuid::new_v4(),
+            title,
+            slug,
+            create_timestamp,
+            update_timestamp,
+        }
+    }
+}
 
 #[derive(Debug, Clone, PartialEq, sqlx::FromRow, serde::Deserialize, serde::Serialize)]
 pub struct Company {
@@ -95,6 +149,25 @@ impl SourceType {
 #[derive(Debug, Clone, PartialEq, Eq, serde::Deserialize)]
 pub(crate) struct SourceTypePatch {
     pub name: String,
+}
+
+#[derive(Debug, Clone, PartialEq, sqlx::FromRow, serde::Serialize)]
+pub(crate) struct Tool {
+    pub id: uuid::Uuid,
+    pub name: String,
+    pub create_timestamp: chrono::DateTime<Utc>,
+    pub update_timestamp: chrono::DateTime<Utc>,
+}
+
+impl Tool {
+    pub fn new(name: String, create_timestamp: chrono::DateTime<Utc>, update_timestamp: chrono::DateTime<Utc>) -> Self {
+        Self {
+            id: uuid::Uuid::new_v4(),
+            name,
+            create_timestamp,
+            update_timestamp,
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, sqlx::FromRow, serde::Serialize)]

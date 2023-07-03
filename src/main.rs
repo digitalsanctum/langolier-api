@@ -30,6 +30,7 @@ mod config;
 mod fetcher;
 mod extractor;
 mod tasks;
+mod rating;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -66,7 +67,11 @@ async fn main() -> anyhow::Result<()> {
                     while let Some(message) = subscriber.next() {
                         let maybe_payload = serde_json::from_slice::<CompanyPayload>(&message.data);
                         match maybe_payload {
-                            Ok(payload) => tracing::info!("Received payload {payload:?}"),
+                            Ok(payload) => {
+                                tracing::info!("Received payload {payload:?}")
+                                // TODO: get company ratings
+
+                            },
                             Err(err) => tracing::error!("Error parsing payload: {err}")
                         }
                     }

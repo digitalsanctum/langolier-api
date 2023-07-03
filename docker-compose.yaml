@@ -1,15 +1,22 @@
 version: '3.8'
 
 services:
-  svc:
+  api:
     build: .
     ports:
       - "8080:8080"
       - "3000:3000"
     environment:
       - DATABASE_URL=postgres://shane:s0crat3s@localhost/zipnews
-#    depends_on:
-#      - db
+      - RUST_LOG=info
+    depends_on:
+      - nats
+  nats:
+    image: nats:latest
+    ports:
+      - "4222:4222"
+      - "6222:6222"
+      - "8222:8222"
 
 #  db:
 #    image: postgres:15

@@ -13,6 +13,7 @@ pub struct Page {
     pub published: bool,
     pub create_timestamp: chrono::DateTime<Utc>,
     pub update_timestamp: chrono::DateTime<Utc>,
+    pub page_type: String,
 }
 
 impl Page {
@@ -22,7 +23,8 @@ impl Page {
                garden_id: uuid::Uuid,
                published: bool,
                create_timestamp: chrono::DateTime<Utc>,
-               update_timestamp: chrono::DateTime<Utc>
+               update_timestamp: chrono::DateTime<Utc>,
+               page_type: String
     ) -> Self {
         Self {
             id: uuid::Uuid::new_v4(),
@@ -33,6 +35,7 @@ impl Page {
             published,
             create_timestamp,
             update_timestamp,
+            page_type,
         }
     }
 }

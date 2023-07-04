@@ -1,14 +1,17 @@
+use std::{fmt, str::FromStr};
+
 use anyhow::Context;
 use axum::{Json, Router};
-use axum::extract::{Path, State};
+use axum::extract::{Path, Query, State};
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::routing::{delete, get};
+use serde::{de, Deserialize, Deserializer};
 use serde_json::json;
 
-use crate::{db};
-use crate::db::{garden_by_id, garden_by_slug, page_by_id, pages_by_garden_slug, source_type_by_id};
-use crate::http::{ApiContext, Result};
+use crate::db;
+use crate::db::{garden_by_id, garden_by_slug, page_by_id, pages_by_garden_slug, pages_by_garden_slug_and_type, source_type_by_id};
+use crate::http::{ApiContext, Error, Result};
 use crate::models::{Company, Feed, Garden, NewsItem, Page, Source, SourceType, SourceTypePatch, Tool};
 use crate::tasks::CompanyPayload;
 
@@ -74,10 +77,38 @@ struct PagesBody {
     pages: Vec<Page>,
 }
 
+/// [`serde_with`]: https://docs.rs/serde_with/1.11.0/serde_with/rust/string_empty_as_none/index.html
+#[derive(Debug, Deserialize)]
+#[allow(dead_code)]
+struct Params {
+    #[serde(default, deserialize_with = "empty_string_as_none")]
+    r#type: Option<String>,
+}
+
+/// Serde deserialization decorator to map empty Strings to None,
+fn empty_string_as_none<'de, D, T>(de: D) -> Result<Option<T>, D::Error>
+    where
+        D: Deserializer<'de>,
+        T: FromStr,
+        T::Err: fmt::Display,
+{
+    let opt = Option::<String>::deserialize(de)?;
+    match opt.as_deref() {
+        None | Some("") => Ok(None),
+        Some(s) => FromStr::from_str(s).map_err(de::Error::custom).map(Some),
+    }
+}
+
 async fn get_pages_by_garden_slug(ctx: State<ApiContext>,
                                   Path(slug): Path<String>,
+                                  Query(params): Query<Params>,
 ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
-    let query_result = pages_by_garden_slug(&ctx.db, &slug).await;
+
+    let query_result: Result<Vec<Page>, sqlx::Error> = if params.r#type.is_some() {
+        pages_by_garden_slug_and_type(&ctx.db, &slug, &params.r#type.unwrap()).await
+    } else {
+        pages_by_garden_slug(&ctx.db, &slug).await
+    };
 
     return match query_result {
         Ok(pages) => {

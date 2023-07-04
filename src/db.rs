@@ -52,6 +52,15 @@ WHERE garden.slug = $1"#, slug)
         .await
 }
 
+pub(crate) async fn pages_by_garden_slug_and_type(pool: &Pool<Postgres>, slug: &String, page_type: &String) -> Result<Vec<Page>, Error> {
+    query_as!(Page, r#"SELECT page.*
+FROM garden
+inner join page on page.garden_id = garden.id
+WHERE garden.slug = $1 and page.page_type = $2"#, slug, page_type)
+        .fetch_all(&*pool)
+        .await
+}
+
 pub(crate) async fn page_by_id(pool: &Pool<Postgres>, id: &uuid::Uuid) -> Result<Page, Error> {
     query_as!(Page, r#"SELECT * FROM page WHERE id = $1"#, id)
         .fetch_one(&*pool)

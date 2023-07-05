@@ -35,7 +35,11 @@ mod rating;
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
 
-    tracing_subscriber::fmt().compact().with_target(false).init();
+    tracing_subscriber::fmt()
+        .compact()
+        // .json()
+        .with_target(false)
+        .init();
 
     // Parse our configuration from the environment.
     // This will exit with a help message if something is wrong.

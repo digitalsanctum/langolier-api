@@ -33,7 +33,7 @@ serde_derive = "1"
 serde_json = "1"
 tokio = { version = "1.0", features = ["full"] }
 tracing = "0.1.37"
-tracing-subscriber = { version = "0.3.16", features = ["env-filter"] }
+tracing-subscriber = { version = "0.3.16", features = ["env-filter", "json"] }
 
 # The `clap` beta gives us a much nicer way to define configuration parameters for our application.
 clap = { version = "4.0.0", features = ["derive", "env"] }

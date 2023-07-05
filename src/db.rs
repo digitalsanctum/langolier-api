@@ -111,6 +111,25 @@ pub(crate) async fn news(pool: &Pool<Postgres>) -> Result<Vec<NewsItem>, Error> 
         .await
 }
 
+pub(crate) async fn save_page(pool: &Pool<Postgres>,
+                              title: &String,
+                              content: &String,
+                              garden_id: &uuid::Uuid,
+                              published: &bool,
+                              slug: &String,
+                              page_type: &String) -> Result<Page, Error> {
+    return sqlx::query_as!(Page, "INSERT INTO page (title, content, garden_id, published, slug, page_type) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *",
+            title, content, garden_id, published, slug, page_type)
+        .fetch_one(pool)
+        .await
+}
+
+pub(crate) async fn save_garden(pool: &Pool<Postgres>, title: &String, slug: &String) -> Result<Garden, Error> {
+    return sqlx::query_as!(Garden, "INSERT INTO garden (title, slug) VALUES ($1, $2) RETURNING *", title, slug)
+        .fetch_one(pool)
+        .await
+}
+
 pub(crate) async fn save_company(pool: &Pool<Postgres>, name: &String, url: Option<String>) -> Result<Company, Error> {
     return sqlx::query_as!(Company, "INSERT INTO company (name, url) VALUES ($1, $2) RETURNING *", name, url.unwrap_or("".to_string()))
         .fetch_one(pool)

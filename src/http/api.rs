@@ -23,10 +23,10 @@ pub(crate) fn router() -> Router<ApiContext> {
                    .delete(delete_source_type)
                    .patch(patch_source_type),
         )
-        .route("/api/gardens", get(get_gardens))
-        .route("/api/gardens/:slug", get(get_garden))
+        .route("/api/gardens", get(get_gardens).post(post_garden))
+        .route("/api/gardens/:slug", get(get_garden).delete(delete_garden))
         .route("/api/gardens/:slug/pages", get(get_pages_by_garden_slug))
-        .route("/api/pages", get(get_pages))
+        .route("/api/pages", get(get_pages).post(post_page))
 
         .route("/api/pages/:id", get(get_page))
         .route("/api/feeds", get(get_feeds))
@@ -194,6 +194,51 @@ struct CreateCompanyRequest {
     url: Option<String>,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+struct CreateGardenRequest {
+    title: String,
+    slug: String,
+}
+
+async fn post_garden(
+    ctx: State<ApiContext>,
+    Json(body): Json<CreateGardenRequest>,
+) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
+    let query_result = db::save_garden(&ctx.db, &body.title, &body.slug).await;
+
+    return match query_result {
+        Ok(garden) => {
+            /*let subject = "garden_created";
+            let payload = CompanyPayload {
+                company: garden.clone(),
+            };
+            let payload_bytes = serde_json::to_vec(&json!(payload)).expect("Failed to serialize CompanyPayload");
+            ctx.nc.publish(subject.into(), payload_bytes).expect("Failed to publish company_created");*/
+
+            let garden_response = json!({"status": "success","data": json!({
+                "garden": garden
+            })});
+
+            Ok((StatusCode::CREATED, Json(garden_response)))
+        }
+        Err(e) => {
+            if e.to_string()
+                .contains("duplicate key value violates unique constraint")
+            {
+                let error_response = serde_json::json!({
+                    "status": "error",
+                    "message": "garden already exists",
+                });
+                return Err((StatusCode::CONFLICT, Json(error_response)));
+            }
+            Err((
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(json!({"status": "error","message": format!("{:?}", e)})),
+            ))
+        }
+    };
+}
+
 async fn post_company(
     ctx: State<ApiContext>,
     Json(body): Json<CreateCompanyRequest>,
@@ -233,7 +278,49 @@ async fn post_company(
     };
 }
 
-// create an async function to handle post
+
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+struct CreatePageRequest {
+    title: String,
+    content: String,
+    garden_id: uuid::Uuid,
+    published: bool,
+    slug: String,
+    page_type: String,
+}
+
+async fn post_page(
+    ctx: State<ApiContext>,
+    Json(body): Json<CreatePageRequest>,
+) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
+    let query_result = db::save_page(&ctx.db, &body.title, &body.content, &body.garden_id, &body.published, &body.slug, &body.page_type).await;
+
+    return match query_result {
+        Ok(page) => {
+            let page_response = json!({"status": "success","data": json!({
+                "page": page
+            })});
+
+            Ok((StatusCode::CREATED, Json(page_response)))
+        }
+        Err(e) => {
+            if e.to_string()
+                .contains("duplicate key value violates unique constraint")
+            {
+                let error_response = serde_json::json!({
+                    "status": "error",
+                    "message": "page already exists",
+                });
+                return Err((StatusCode::CONFLICT, Json(error_response)));
+            }
+            Err((
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(json!({"status": "error","message": format!("{:?}", e)})),
+            ))
+        }
+    };
+}
+
 async fn post_source_types(
     ctx: State<ApiContext>,
     Json(body): Json<CreateSourceTypeRequest>,
@@ -357,6 +444,27 @@ async fn patch_source_type(
             ))
         }
     };
+}
+
+async fn delete_garden(
+    ctx: State<ApiContext>,
+    Path(slug): Path<String>,
+) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
+    let rows_affected = sqlx::query!("DELETE FROM garden WHERE slug = $1", slug)
+        .execute(&ctx.db)
+        .await
+        .unwrap()
+        .rows_affected();
+
+    if rows_affected == 0 {
+        let error_response = serde_json::json!({
+            "status": "error",
+            "message": format!("garden with slug: {} not found", slug)
+        });
+        return Err((StatusCode::NOT_FOUND, Json(error_response)));
+    }
+
+    Ok(StatusCode::NO_CONTENT)
 }
 
 async fn delete_source_type(

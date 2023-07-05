@@ -10,30 +10,35 @@ use serde::{de, Deserialize, Deserializer};
 use serde_json::json;
 
 use crate::db;
-use crate::db::{garden_by_id, garden_by_slug, page_by_id, pages_by_garden_slug, pages_by_garden_slug_and_type, source_type_by_id};
+use crate::db::{garden_by_id, garden_by_slug, page_by_id, page_by_slug, pages_by_garden_slug, pages_by_garden_slug_and_type, source_type_by_id};
 use crate::http::{ApiContext, Error, Result};
 use crate::models::{Company, Feed, Garden, NewsItem, Page, Source, SourceType, SourceTypePatch, Tool};
 use crate::tasks::CompanyPayload;
 
 pub(crate) fn router() -> Router<ApiContext> {
     Router::new()
-        .route("/api/source_types", get(list_source_types).post(post_source_types))
+        .route("/api/source_types",
+               get(list_source_types)
+                   .post(post_source_types))
         .route("/api/source_types/:id",
                get(get_source_type)
                    .delete(delete_source_type)
                    .patch(patch_source_type),
         )
-        .route("/api/gardens", get(get_gardens).post(post_garden))
-        .route("/api/gardens/:slug", get(get_garden).delete(delete_garden))
+        .route("/api/gardens", get(get_gardens)
+            .post(post_garden))
+        .route("/api/gardens/:slug", get(get_garden)
+            .delete(delete_garden))
         .route("/api/gardens/:slug/pages", get(get_pages_by_garden_slug))
         .route("/api/pages", get(get_pages).post(post_page))
 
-        .route("/api/pages/:id", get(get_page))
+        .route("/api/pages/:slug", get(get_page))
         .route("/api/feeds", get(get_feeds))
         .route("/api/sources", get(get_sources))
         .route("/api/tools", get(get_tools))
         .route("/api/news", get(get_news))
-        .route("/api/companies", get(get_company).post(post_company))
+        .route("/api/companies", get(get_company)
+            .post(post_company))
         .route("/api/companies/:id", delete(delete_company))
 }
 
@@ -103,7 +108,6 @@ async fn get_pages_by_garden_slug(ctx: State<ApiContext>,
                                   Path(slug): Path<String>,
                                   Query(params): Query<Params>,
 ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
-
     let query_result: Result<Vec<Page>, sqlx::Error> = if params.r#type.is_some() {
         pages_by_garden_slug_and_type(&ctx.db, &slug, &params.r#type.unwrap()).await
     } else {
@@ -374,9 +378,9 @@ async fn get_garden(ctx: State<ApiContext>,
 }
 
 async fn get_page(ctx: State<ApiContext>,
-                  Path(id): Path<uuid::Uuid>,
+                  Path(slug): Path<String>,
 ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
-    let query_result = page_by_id(&ctx.db, &id).await;
+    let query_result = page_by_slug(&ctx.db, &slug).await;
 
     return match query_result {
         Ok(page) => {
@@ -386,7 +390,7 @@ async fn get_page(ctx: State<ApiContext>,
         Err(_) => {
             let error_response = json!({
                 "status": "error",
-                "message": format!("page with id: {} not found", id)
+                "message": format!("page with slug: {} not found", slug)
             });
             Err((StatusCode::NOT_FOUND, Json(error_response)))
         }

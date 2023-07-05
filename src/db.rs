@@ -67,6 +67,12 @@ pub(crate) async fn page_by_id(pool: &Pool<Postgres>, id: &uuid::Uuid) -> Result
         .await
 }
 
+pub(crate) async fn page_by_slug(pool: &Pool<Postgres>, slug: &String) -> Result<Page, Error> {
+    query_as!(Page, r#"SELECT * FROM page WHERE slug = $1"#, slug)
+        .fetch_one(&*pool)
+        .await
+}
+
 pub(crate) async fn source_type_by_id(pool: &Pool<Postgres>, id: &i32) -> Result<SourceType, Error> {
     query_as!(SourceType, r#"SELECT * FROM source_type WHERE id = $1"#, id)
         .fetch_one(&*pool)

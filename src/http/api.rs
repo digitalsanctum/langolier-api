@@ -32,7 +32,7 @@ pub(crate) fn router() -> Router<ApiContext> {
         .route("/api/gardens/:slug/pages", get(get_pages_by_garden_slug))
         .route("/api/pages", get(get_pages).post(post_page))
 
-        .route("/api/pages/:slug", get(get_page))
+        .route("/api/pages/:slug", get(get_page).delete(delete_page))
         .route("/api/feeds", get(get_feeds))
         .route("/api/sources", get(get_sources))
         .route("/api/tools", get(get_tools))
@@ -297,7 +297,14 @@ async fn post_page(
     ctx: State<ApiContext>,
     Json(body): Json<CreatePageRequest>,
 ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
-    let query_result = db::save_page(&ctx.db, &body.title, &body.content, &body.garden_id, &body.published, &body.slug, &body.page_type).await;
+    let query_result = db::save_page(&ctx.db,
+                                     &body.title,
+                                     &body.content,
+                                     &body.garden_id,
+                                     &body.published,
+                                     &body.slug,
+                                     &body.page_type
+    ).await;
 
     return match query_result {
         Ok(page) => {
@@ -449,6 +456,28 @@ async fn patch_source_type(
         }
     };
 }
+
+async fn delete_page(
+    ctx: State<ApiContext>,
+    Path(slug): Path<String>,
+) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
+    let rows_affected = sqlx::query!("DELETE FROM page WHERE slug = $1", slug)
+        .execute(&ctx.db)
+        .await
+        .unwrap()
+        .rows_affected();
+
+    if rows_affected == 0 {
+        let error_response = serde_json::json!({
+            "status": "error",
+            "message": format!("page with slug: {} not found", slug)
+        });
+        return Err((StatusCode::NOT_FOUND, Json(error_response)));
+    }
+
+    Ok(StatusCode::NO_CONTENT)
+}
+
 
 async fn delete_garden(
     ctx: State<ApiContext>,

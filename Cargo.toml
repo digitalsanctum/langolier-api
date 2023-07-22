@@ -5,7 +5,7 @@ version = "0.1.0"
 description = "A personal digital garden and AI assistant"
 authors = ["Shane Witbeck <shane@digitalsanctum.com>"]
 edition = "2021"
-rust-version = "1.68"
+rust-version = "1.71"
 license-file = "LICENSE"
 readme = "README.md"
 documentation = "https://github.com/digitalsanctum/langolier-api"
@@ -21,9 +21,8 @@ name = "langolier-api"
 path = "src/main.rs"
 
 [dependencies]
-axum = "0.6.15"
+axum = { version = "0.6.18", features = ["multipart"] }
 
-# https://docs.rs/axum-extra/latest/axum_extra/
 axum-extra = "0.7.3"
 
 tower = { version = "0.4", features = ["util"] }
@@ -38,7 +37,7 @@ tracing-subscriber = { version = "0.3.16", features = ["env-filter", "json"] }
 # The `clap` beta gives us a much nicer way to define configuration parameters for our application.
 clap = { version = "4.0.0", features = ["derive", "env"] }
 
-sqlx = { version = "0.6.3", features = [ "postgres", "runtime-tokio-rustls", "uuid", "time", "macros", "chrono", "any" ] }
+sqlx = { version = "0.7.1", features = [ "postgres", "runtime-tokio-rustls", "uuid", "time", "macros", "chrono", "any" ] }
 uuid = { version = "1", features = ["serde", "v4"] }
 chrono = { version = "0.4.26", features = ["serde"] }
 anyhow = "1"
@@ -56,8 +55,10 @@ opml = "1.1.5"
 playwright = "0.0.20"
 reqwest = { version = "0.11.18", features = ["json"] }
 rss = { version = "2", features = ["serde"] }
-selectors = "0.24.0"
+selectors = "0.25.0"
 simplelog = "0.12.1"
 slug = "0.1.4"
 webpage = { version = "1", features = ["serde"] }
 url = "2.4.0"
+newsapi = "0.6.0"
+openai-api-rs = "0.1.8"

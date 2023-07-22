@@ -1,0 +1,26 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\nWITH e AS(\nINSERT INTO feed (id, url, title, source_id, feed_type)\nVALUES ($1, $2, $3, $4, $5)\nON CONFLICT (url) DO NOTHING\nRETURNING id\n)\nSELECT * FROM e UNION SELECT id FROM feed WHERE url = $2\n    ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Text",
+        "Uuid",
+        "Varchar"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "1268f9cb9fbca7e9068f4b3f5d7ed5afa66d239954f22ae6fc44e4a0d11aeb06"
+}

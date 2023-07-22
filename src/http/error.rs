@@ -13,6 +13,7 @@ use std::collections::HashMap;
 /// For convenience, this represents both API errors as well as internal recoverable errors,
 /// and maps them to appropriate status codes along with at least a minimally useful error
 /// message in a plain text body, or a JSON body in the case of `UnprocessableEntity`.
+#[allow(dead_code)]
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
     /// Return `401 Unauthorized`
@@ -82,6 +83,7 @@ impl Error {
     /// Multiple for the same key are collected into a list for that key.
     ///
     /// Try "Go to Usage" in an IDE for examples.
+    #[allow(dead_code)]
     pub fn unprocessable_entity<K, V>(errors: impl IntoIterator<Item = (K, V)>) -> Self
     where
         K: Into<Cow<'static, str>>,

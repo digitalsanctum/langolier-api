@@ -72,9 +72,8 @@ async fn main() -> anyhow::Result<()> {
                         let maybe_payload = serde_json::from_slice::<CompanyPayload>(&message.data);
                         match maybe_payload {
                             Ok(payload) => {
-                                tracing::info!("Received payload {payload:?}")
-                                // TODO: get company ratings
-
+                                tracing::info!("Received payload {payload:?}");
+                                handle_new_company(&payload.company.name).await;
                             },
                             Err(err) => tracing::error!("Error parsing payload: {err}")
                         }
@@ -88,6 +87,10 @@ async fn main() -> anyhow::Result<()> {
     http::serve(config, db, nats_client).await?;
 
     Ok(())
+}
+
+async fn handle_new_company(company_name: &String) {
+    tracing::info!("Handling new company {company_name}");
 }
 
 async fn serve(app: Router, port: u16) {

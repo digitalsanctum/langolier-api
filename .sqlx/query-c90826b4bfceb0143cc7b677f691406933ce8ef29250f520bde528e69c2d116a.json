@@ -1,0 +1,32 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\nWITH e AS(\nINSERT INTO source (id, name, url, type_id, paywall, feed_available, description, short_name, state, city, create_timestamp)\nVALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)\nON CONFLICT (url) DO NOTHING\nRETURNING id\n)\nSELECT * FROM e UNION SELECT id FROM source WHERE url = $3\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Varchar",
+        "Varchar",
+        "Int4",
+        "Bool",
+        "Bool",
+        "Text",
+        "Varchar",
+        "Varchar",
+        "Varchar",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "c90826b4bfceb0143cc7b677f691406933ce8ef29250f520bde528e69c2d116a"
+}

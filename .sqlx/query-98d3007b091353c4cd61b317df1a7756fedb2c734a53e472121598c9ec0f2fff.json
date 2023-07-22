@@ -1,0 +1,101 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO company (name, url) VALUES ($1, $2) RETURNING *",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "url",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "ticker",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "indeed_rating",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 5,
+        "name": "glassdoor_rating",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 6,
+        "name": "create_timestamp",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 7,
+        "name": "update_timestamp",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 8,
+        "name": "num_employees_min",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 9,
+        "name": "num_employees_max",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 10,
+        "name": "sector",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 11,
+        "name": "industry",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 12,
+        "name": "exchange",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 13,
+        "name": "address",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Varchar",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "98d3007b091353c4cd61b317df1a7756fedb2c734a53e472121598c9ec0f2fff"
+}

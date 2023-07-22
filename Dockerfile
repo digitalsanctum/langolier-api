@@ -1,5 +1,10 @@
 # Stage 1: Build
-FROM rust:1.68 as builder
+ARG RUST_VERSION=1.71
+FROM rust:${RUST_VERSION} as builder
+
+#ENV DATABASE_URL=postgres://shane:shane@localhost:5432/langolier
+ARG SQLX_OFFLINE
+ENV SQLX_OFFLINE=true
 
 # Set the working directory
 WORKDIR /usr/src/app
@@ -7,9 +12,8 @@ WORKDIR /usr/src/app
 # Copy the source code into the container
 COPY . .
 
-RUN ls -la .
-
 # Build the release version of the microservice
+RUN cargo install sqlx-cli
 RUN cargo build --release --bin langolier-api
 
 # Stage 2: Serve

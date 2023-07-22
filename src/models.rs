@@ -71,6 +71,12 @@ pub struct Company {
     pub glassdoor_rating: Option<String>,
     pub create_timestamp: chrono::DateTime<Utc>,
     pub update_timestamp: chrono::DateTime<Utc>,
+    pub sector: Option<String>,
+    pub industry: Option<String>,
+    pub address: Option<String>,
+    pub exchange: Option<String>,
+    pub num_employees_min: Option<i32>,
+    pub num_employees_max: Option<i32>
 }
 
 impl Company {
@@ -91,6 +97,12 @@ impl Company {
             glassdoor_rating,
             create_timestamp,
             update_timestamp,
+            sector: None,
+            industry: None,
+            address: None,
+            exchange: None,
+            num_employees_min: None,
+            num_employees_max: None,
         }
     }
 }

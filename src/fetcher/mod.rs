@@ -25,6 +25,7 @@ pub(crate) async fn fetch_url(req: &WebpageRequest) -> Result<Webpage, Error> {
     Webpage::from_url(&*req.url, html_options)
 }
 
+#[allow(dead_code)]
 async fn fetch() -> Result<(), Error> {
     let args: Vec<String> = env::args().collect();
     info!("{:?}", args);
@@ -631,6 +632,7 @@ async fn playwright_fetch(url: &str) -> Option<String> {
     page.content().await.ok()
 }
 
+#[allow(dead_code)]
 async fn validate_url(url: &str) -> bool {
     let url_parsed = Url::parse(url);
     match url_parsed {

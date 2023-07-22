@@ -1,13 +1,18 @@
-use std::{fmt, str::FromStr};
+use std::{env, fmt, str::FromStr};
 
 use anyhow::Context;
 use axum::{Json, Router};
-use axum::extract::{Path, Query, State};
+use axum::extract::{DefaultBodyLimit, Multipart, Path, Query, State};
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
-use axum::routing::{delete, get};
+use axum::routing::{delete, get, post};
+use chrono::{Duration, Utc};
+use newsapi::api::NewsAPIClient;
+use newsapi::constants::{Category, Language, SortMethod};
+use newsapi::payload::article::Articles;
 use serde::{de, Deserialize, Deserializer};
-use serde_json::json;
+use serde_json::{json, Value};
+use tower_http::limit::RequestBodyLimitLayer;
 
 use crate::db;
 use crate::db::{garden_by_id, garden_by_slug, page_by_id, page_by_slug, pages_by_garden_slug, pages_by_garden_slug_and_type, source_type_by_id};
@@ -30,6 +35,7 @@ pub(crate) fn router() -> Router<ApiContext> {
         .route("/api/gardens/:slug", get(get_garden)
             .delete(delete_garden))
         .route("/api/gardens/:slug/pages", get(get_pages_by_garden_slug))
+        .route("/api/news_api/:query", get(get_news_api))
         .route("/api/pages", get(get_pages).post(post_page))
 
         .route("/api/pages/:slug", get(get_page).delete(delete_page))
@@ -37,9 +43,31 @@ pub(crate) fn router() -> Router<ApiContext> {
         .route("/api/sources", get(get_sources))
         .route("/api/tools", get(get_tools))
         .route("/api/news", get(get_news))
-        .route("/api/companies", get(get_company)
+        .route("/api/companies", get(get_companies)
             .post(post_company))
         .route("/api/companies/:id", delete(delete_company))
+        .route("/uploads", post(handle_upload))
+        .layer(DefaultBodyLimit::disable())
+        .layer(RequestBodyLimitLayer::new(
+            250 * 1024 * 1024, /* 250mb */
+        ))
+}
+
+async fn handle_upload(mut multipart: Multipart) {
+    while let Some(field) = multipart.next_field().await.unwrap() {
+        let name = field.name().unwrap().to_string();
+        let file_name = field.file_name().unwrap().to_string();
+        let content_type = field.content_type().unwrap().to_string();
+        let data = field.bytes().await.unwrap();
+
+        println!(
+            "Length of `{}` (`{}`: `{}`) is {} bytes",
+            name,
+            file_name,
+            content_type,
+            data.len()
+        );
+    }
 }
 
 #[derive(serde::Serialize)]
@@ -131,6 +159,37 @@ async fn get_pages_by_garden_slug(ctx: State<ApiContext>,
     };
 }
 
+async fn get_news_api(ctx: State<ApiContext>,
+                      Path(query): Path<String>) -> Result<impl IntoResponse, (StatusCode, Json<Value>)> {
+    let key = env::var("NEWS_API_KEY").expect("Missing NEWS_API_KEY environment variable");
+
+    let start_timestamp = Utc::now() - Duration::days(10);
+    let end_timestamp = Utc::now();
+
+    // create a client
+    let mut c = NewsAPIClient::new(key);
+
+    c
+        .language(Language::German)
+        .from(&start_timestamp)
+        .to(&end_timestamp)
+        .query(query.as_str())
+        .sort_by(SortMethod::Popularity)
+        .everything();
+
+    // debug print the current client status - you can see the URL that will be sent to the API
+    println!("{:?}", c);
+
+    // fire off a request to the endpoint and deserialize the results into an Article struct
+    let articles = c.send_async::<Articles>().await.unwrap();
+
+    // print the results to the terminal
+    println!("{:?}", articles);
+
+    Ok(Json(articles))
+
+}
+
 async fn get_pages(ctx: State<ApiContext>) -> Result<Json<PagesBody>> {
     let pages = db::pages(&ctx.db).await.context("Failed to get pages").unwrap();
     Ok(Json(PagesBody {
@@ -159,7 +218,7 @@ async fn get_news(ctx: State<ApiContext>) -> Result<Json<NewsBody>> {
     }))
 }
 
-async fn get_company(ctx: State<ApiContext>) -> Result<Json<CompanyBody>> {
+async fn get_companies(ctx: State<ApiContext>) -> Result<Json<CompanyBody>> {
     let companies = db::companies(&ctx.db).await.context("Failed to get companies").unwrap();
     Ok(Json(CompanyBody {
         companies,

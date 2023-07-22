@@ -1,0 +1,27 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\nWITH e AS(\nINSERT INTO news (id, title, url, published_timestamp, guid, feed_id)\nVALUES ($1, $2, $3, $4, $5, $6)\nON CONFLICT (guid) DO NOTHING\nRETURNING id\n)\nSELECT * FROM e UNION SELECT id FROM news WHERE guid = $5\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Text",
+        "Timestamptz",
+        "Varchar",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "6c6a3f97794caa7854772c2f571815ac4f40bc28c7d1993a2d1b94dac84f40fd"
+}

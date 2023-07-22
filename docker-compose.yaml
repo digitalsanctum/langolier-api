@@ -1,15 +1,21 @@
 version: '3.8'
 
 services:
+#  ui:
+#    build: ../langolier-svelte
+#    ports:
+#      - "5000:5173"
+#    depends_on:
+#      - api
   api:
     build: .
     ports:
-      - "8080:8080"
       - "3000:3000"
     environment:
-      - DATABASE_URL=postgres://shane:s0crat3s@localhost/zipnews
-      - RUST_LOG=info
+      DATABASE_URL: "postgres://shane:shane@db:5432/langolier"
+      RUST_LOG: "info"
     depends_on:
+      - db
       - nats
   nats:
     image: nats:latest
@@ -17,17 +23,18 @@ services:
       - "4222:4222"
       - "6222:6222"
       - "8222:8222"
+  db:
+    image: postgres:15
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: shane
+      POSTGRES_PASSWORD: shane
+      POSTGRES_DB: langolier
+    volumes:
+      - db:/var/lib/postgresql/data
 
-#  db:
-#    image: postgres:15
-#    restart: always
-#    environment:
-#      - POSTGRES_USER=postgres
-#      - POSTGRES_PASSWORD=postgres
-#      - POSTGRES_DB=postgres
-#    volumes:
-#      - pgdata:/var/lib/postgresql/data
-#
-#volumes:
-#  pgdata:
-
+volumes:
+  db:
+    driver: local

@@ -7,7 +7,7 @@ API for Langolier, a personal digital garden and AI assistant.
 Requires the following environment variables:
 
 ```
-DATABASE_URL=postgres://shane:s0crat3s@localhost/zipnews;RUST_LOG=info
+DATABASE_URL=postgres://shane:shane@localhost/langolier;RUST_LOG=info
 ```
 
 ## NATS

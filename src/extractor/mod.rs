@@ -5,17 +5,20 @@ use std::io::Read;
 use kuchiki::traits::*;
 use kuchiki::{NodeRef};
 
+#[allow(dead_code)]
 pub(crate) async fn extract_text_from_str(content: String, ignore_whitespace: bool) -> Result<String, Box<dyn Error>> {
     let document = kuchiki::parse_html().from_utf8().read_from(&mut content.as_bytes())?;
     process_doc(document, ignore_whitespace).await
 }
 
+#[allow(dead_code)]
 pub(crate) async fn extract_text_from_file(path: String, ignore_whitespace: bool) -> Result<String, Box<dyn Error>> {
     let mut input: Box<dyn io::Read> = Box::new(std::fs::File::open(path).expect("Failed to open file"));
     let document = kuchiki::parse_html().from_utf8().read_from(&mut input)?;
     process_doc(document, ignore_whitespace).await
 }
 
+#[allow(dead_code)]
 pub(crate) async fn process_doc(document: NodeRef, ignore_whitespace: bool) -> Result<String, Box<dyn Error>> {
     let mut output_buffer = String::new();
     let select_result = document.select("body");
@@ -54,6 +57,7 @@ fn serialize_text(node: &NodeRef, ignore_whitespace: bool) -> String {
     result
 }
 
+#[allow(dead_code)]
 pub(crate) fn get_test_content(path: String) -> String {
     let mut file: File = File::open(path).unwrap();
     let mut contents = String::new();

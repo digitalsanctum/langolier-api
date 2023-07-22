@@ -1,0 +1,80 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT * FROM source",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "url",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "city",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "state",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 5,
+        "name": "short_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 6,
+        "name": "description",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "create_timestamp",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 8,
+        "name": "feed_available",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 9,
+        "name": "paywall",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 10,
+        "name": "type_id",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      false,
+      true,
+      true,
+      false
+    ]
+  },
+  "hash": "9dca7ae212308097c6edcb6a405b24381d6fbceccc33f4db0d26b42b182eca26"
+}

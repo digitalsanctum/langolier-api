@@ -8,11 +8,12 @@ services:
 #    depends_on:
 #      - api
   api:
-    build: .
+    image: langolier-api:latest
     ports:
       - "3000:3000"
     environment:
       DATABASE_URL: "postgres://shane:shane@db:5432/langolier"
+      NATS_URL: "nats://nats:4222"
       RUST_LOG: "info"
     depends_on:
       - db

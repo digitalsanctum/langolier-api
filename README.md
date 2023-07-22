@@ -2,12 +2,28 @@
 
 API for Langolier, a personal digital garden and AI assistant.
 
-## Usage
+## Build
 
-Requires the following environment variables:
+To build the project, run:
 
+```shell
+cargo build
 ```
-DATABASE_URL=postgres://shane:shane@localhost/langolier;RUST_LOG=info
+
+## Container
+
+To build the container, run:
+
+```shell
+docker build -t langolier-api .
+```
+
+## Run
+
+To run the project, run:
+
+```shell
+docker compose up
 ```
 
 ## NATS
@@ -15,9 +31,16 @@ DATABASE_URL=postgres://shane:shane@localhost/langolier;RUST_LOG=info
 This project uses NATS for messaging. To run NATS locally, use the following command:
 
 ```shell
-docker run -d -p 4222:4222 --name nats-server nats:latest
+docker compose up -d nats
 ```
 
+## Dependencies
+
+To find outdated dependencies, run:
+
+```shell
+cargo outdated -R
+```
 
 ## References
 
